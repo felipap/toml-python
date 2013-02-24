@@ -1,16 +1,15 @@
 #! /usr/bin/env python3
 
-# a simplistic TOML parser for python
+# TOML parser for python
 
-import functools
+from datetime import datetime as dt
 import re
-import datetime
 
 class Reader(object):
 
 	def __init__(self, generator):
 		"""Takes as argument an object to feed lines tot the Reader."""		
-		assert iter(generator), "Argument not iterable." # Some duck-typing.
+		assert iter(generator), "Argument not iterable." # Some duck-typing.:P
 		self._lineGen = generator
 		
 	def __iter__(self):
@@ -37,8 +36,7 @@ class Reader(object):
 		return [p for p in PATTERN.split(line) if p.strip()]
 		
 	def _getNextLine(self):
-		try:
-			# Turn next line into a list of tokens.
+		try: # Turn next line into a list of tokens.
 			tline = self._cleverSplit(next(self._lineGen))
 			if not tline:
 				return self._getNextLine()
@@ -75,176 +73,126 @@ class Reader(object):
 			raise Exception("EOF expected but not found.", self.line)
 	
 
-from colorama import Fore, Back, Style
-from colorama import init
-
-init(autoreset=True)
-
-def logCall(func):
-	@functools.wraps(func)
-	def wrapper(*args, **kwargs):
-		print("%sfunction %s() called" % (Fore.RED, func.__name__))
-		return func(*args, **kwargs)
-	return wrapper
-	
-
 class Evaluator(object):
-	# THE parser
 
 	def __init__(self, file):
 		self.file = file
 		self.runtime = dict()
-		self._current_keygroup = self.runtime
+
+		self.current_keygroup = self.runtime
 		self.mainLoop()
+
+	def __call__(self):
+		import json
+		print(json.dumps(self.runtime, indent=4, separators=(',', ': ')))
 	
 	def assignKeyGroup(self, keygroup):
 		cg = self.runtime
 		nlist = keygroup.split('.')
 		for name in nlist:
-			try:
-				cg[name]
+			try: cg[name]
 			except KeyError:
 				cg[name] = dict()
-			print("going to %s", name)
+			# print("going to %s", name)
 			cg = cg[name]
-		
-		self._current_keygroup = cg
+		self.current_keygroup = cg
 
 	####
 	
-	@logCall
-	def parseComment(self, reader):
-		reader.discartLine()
-	
-	@logCall
-	def parseSymbol(self, reader):
-		return next(reader)
+	def parseEXP(self):
 
-	@logCall
-	def parseKEYGROUP(self, reader):
-		reader.skipToken('[')
-		keygroup = self.parseSymbol(reader)
-		reader.skipToken(']')
-		reader.assertEOF()
-		self.assignKeyGroup(keygroup)
-	
-	@logCall
-	def parseASSIGN(self, reader):
-		# Parse an assignment
-		var = self.parseSymbol(reader)
-		reader.skipToken('=')
-		val = self.parseEXP(reader)
-		reader.assertEOF()
-		self._current_keygroup[var] = val
-	
-	@logCall
-	def parseEXP(self, reader):
+		T = ((self.parseLIST, lambda t: t == '['),
+			(self.parseINTEGER, lambda t: int(t)),
+			(self.parseFLOAT, lambda t: float(t)),
+			(self.parseSTRING, lambda t: t[0] in ('"', "'")),
+			(self.parseDATE, lambda t: dt.strptime(t, "%Y-%m-%dT%H:%M:%SZ")),
+			(self.parseBOOL, lambda t: t in ('true', 'false')))
 
-		isLIST 		= lambda i, token: token == '['
-		isINTEGER 	= lambda i, token: token.isdigit()
-		isSTRING 	= lambda i, token: token[0] in ('"', "'")
-		isBOOL 		= lambda i, token: token in ('true', 'false')
-		def isDATE(i, token):
+		# print("\tPARSING EXPRESSION", self.reader.line)
+
+		for callback, test in T:
 			try:
-				datetime.datetime.strptime(token, "%Y-%m-%dT%H:%M:%SZ")
-				return True
-			except ValueError:
-				return False
+				if test(self.reader.top()):
+					return callback()
+			except:
+				continue
 
+	#######
 
-		print("\tPARSING EXPRESSION", reader.line)
-
-		for index, token in enumerate(reader):
-			
-			print("\t\tTOKEN: ", token)
-			reader.ungetToken(token)
-			
-			if isLIST(index, token):
-				return self.parseLIST(reader)
-			elif isSTRING(index, token):
-				return self.parseSTRING(reader)
-			elif isINTEGER(index, token):
-				return self.parseINTEGER(reader)
-			elif isDATE(index, token):
-				return self.parseDATE(reader)
-			elif isBOOL(index, token):
-				return self.parseBOOL(reader)
-			else:
-				WUT()
-
-	# EXP evaluators
-
-	@logCall
-	def parseINTEGER(self, reader):
-		return int(next(reader))
+	def parseINTEGER(self):
+		return int(next(self.reader))
 	
-	@logCall
-	def parseFLOAT(self, reader):
-		return float(next(reader))
+	def parseFLOAT(self):
+		return float(next(self.reader))
 
-	@logCall
-	def parseSTRING(self, reader):
-		return next(reader)[1:-1] # Remove quotes.
+	def parseSTRING(self):
+		return next(self.reader)[1:-1] # Remove quotes.
 	
-	@logCall
-	def parseLIST(self, reader):
-		reader.skipToken("[")
-		l = [self.parseEXP(reader), ]
-		while reader.top() != ']':
-			reader.skipToken(",")
-			l.append(self.parseEXP(reader))
-		reader.skipToken("]")
+	def parseLIST(self):
+		self.reader.skipToken("[")
+		l = [self.parseEXP(), ]
+		while self.reader.top() != ']':
+			self.reader.skipToken(",")
+			l.append(self.parseEXP())
+		self.reader.skipToken("]")
 		return l
 	
-	@logCall
-	def parseDATE(self, reader):
-		return datetime.datetime.strptime(next(reader), "%Y-%m-%dT%H:%M:%SZ").isoformat()
+	def parseDATE(self):
+		return dt.strptime(next(self.reader), "%Y-%m-%dT%H:%M:%SZ").isoformat()
 	
-	@logCall
-	def parseBOOL(self, reader):
-		return {'true': True, 'false': False}[next(reader)]
+	def parseBOOL(self):
+		return {'true': True, 'false': False}[next(self.reader)]
 
-	#
+	#######
+
+	def parseCOMMENT(self):
+		self.reader.discartLine()
+	
+	def parseSymbol(self):
+		return next(self.reader)
+
+	def parseKEYGROUP(self):
+		self.reader.skipToken('[')
+		keygroup = self.parseSymbol()
+		self.reader.skipToken(']')
+		self.assignKeyGroup(keygroup)
+	
+	def parseASSIGN(self):
+		# Parse an assignment
+		var = self.parseSymbol()
+		self.reader.skipToken('=')
+		self.current_keygroup[var] = val
+
+	#######
+
 	def mainLoop(self):
-		# parse lines
-		
-		isCOMMENT 	= lambda i, token: token in ("#",)
-		isKEYGROUP 	= lambda i, token: token == ("[") and i==0
-		isSYMBOL 	= lambda token: bool(re.match(r'[^\W\d_]', token, re.U))
-		isASSIGN 	= lambda i, token: isSYMBOL(token) and i==0
+		TESTS = (
+			(self.parseCOMMENT, 	lambda token: token in ("#",)),
+			(self.parseKEYGROUP, 	lambda token: token == ("[")),
+			(self.parseASSIGN,lambda token: re.match(r'[^\W\d_]', token, re.U)),
+		)
 
-		reader = Reader(self.file)
-		while reader.readNextLine():
-			
-			print("\nnewline: ", reader.line)
-
-			for index, token in enumerate(reader):
-				# Due to the simplistic and non-recursive nature of the markup,
-				# the index might be used to identify certain types of tokens.
-
-				print("\tTOKEN: ", token)
-				
-				reader.ungetToken(token)
-				
-				if isCOMMENT(index, token):
-					self.parseComment(reader)
-				elif isKEYGROUP(index, token):
-					self.parseKEYGROUP(reader)
-				elif isASSIGN(index, token):
-					self.parseASSIGN(reader)	
-				else:
-					print("Uncaught token", token, "at", index)
-			
-			print("RUNTIME:", self.runtime)
+		self.reader = Reader(self.file)
+		while self.reader.readNextLine():
+			# Due to the simplistic and non-recursive nature of the markup,
+			# all expressions can be identified by the first meaninful
+			# (non-whitespace) character of the line.
 	
-		import json
-		s = json.dumps(self.runtime, indent=4, separators=(',', ': '))
-		json.dump(self.runtime, open("do.json", "w"))
-		print(s)
-#
+			for callback, test in TESTS:
+				if test(self.reader.top()):
+					callback()
+					break
+			else:
+				raise Exception("Unrecognized token %s" % token)
+			self.reader.assertEOF()
+
+		return self.runtime
 
 def main():
 	# some setting up
+
+	obj = Evaluator(open('test.toml', 'r'))
+	return
 
 	import sys
 	file = open(sys.argv[1], "r")
