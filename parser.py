@@ -1,9 +1,12 @@
 #! /usr/bin/env python3
 
 # TOML parser for python
+# re is freaking fast
 
 from datetime import datetime as dt
 import re
+
+
 
 class Reader(object):
 
@@ -26,9 +29,7 @@ class Reader(object):
 	def _cleverSplit(line):
 		# Splits tokens
 
-		PATTERN = re.compile(r"""(\ 		|	# match space
-								\] | \[		| 	# match braces
-								\s 		 	| 	# match whitespace
+		PATTERN = re.compile(r"""(\s|\]|\[|
 								\, |
 								".*?[^\\]" 	| 	# match single quoted exp
 								'.*?[^\\]'	| 	# match double quoted exp
@@ -76,13 +77,10 @@ class Reader(object):
 class Evaluator(object):
 
 	def __init__(self, file):
-		self.file = file
 		self.runtime = dict()
-
+		self.reader = Reader(file)
 		self.current_keygroup = self.runtime
-		self.mainLoop()
 
-	def __call__(self):
 		import json
 		print(json.dumps(self.runtime, indent=4, separators=(',', ': ')))
 	
@@ -101,66 +99,48 @@ class Evaluator(object):
 	
 	def parseEXP(self):
 
-		T = ((self.parseLIST, lambda t: t == '['),
-			(self.parseINTEGER, lambda t: int(t)),
-			(self.parseFLOAT, lambda t: float(t)),
-			(self.parseSTRING, lambda t: t[0] in ('"', "'")),
-			(self.parseDATE, lambda t: dt.strptime(t, "%Y-%m-%dT%H:%M:%SZ")),
-			(self.parseBOOL, lambda t: t in ('true', 'false')))
+		ISO8601 = re.compile(r'^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}Z$')
+		FLOAT = re.compile(r'^[+-]?\d(>?\.\d+)?$')
+		INTEGER = re.compile(r'^[+-]?\d*$')
+		STRING = re.compile(r'(?:".*?[^\\]")|(?:\'.*?[^\\]\')')
 
-		# print("\tPARSING EXPRESSION", self.reader.line)
-
-		for callback, test in T:
-			try:
-				if test(self.reader.top()):
-					return callback()
-			except:
-				continue
-
-	#######
-
-	def parseINTEGER(self):
-		return int(next(self.reader))
-	
-	def parseFLOAT(self):
-		return float(next(self.reader))
-
-	def parseSTRING(self):
-		return next(self.reader)[1:-1] # Remove quotes.
-	
-	def parseLIST(self):
-		self.reader.skipToken("[")
-		l = [self.parseEXP(), ]
-		while self.reader.top() != ']':
-			self.reader.skipToken(",")
-			l.append(self.parseEXP())
-		self.reader.skipToken("]")
-		return l
-	
-	def parseDATE(self):
-		return dt.strptime(next(self.reader), "%Y-%m-%dT%H:%M:%SZ").isoformat()
-	
-	def parseBOOL(self):
-		return {'true': True, 'false': False}[next(self.reader)]
+		token = self.reader.top()
+		if token == '[':
+			self.reader.skipToken("[")
+			l = [self.parseEXP(), ]
+			while self.reader.top() != ']':
+				self.reader.skipToken(",")
+				l.append(self.parseEXP())
+			self.reader.skipToken("]")
+			return l
+		elif token in ('true', 'false'):
+			return {'true': True, 'false': False}[next(self.reader)]
+		elif token.isdigit() or token[1:].isdigit() and token[1] in ('+', '-'):
+			return int(next(self.reader))
+		elif FLOAT.match(token):
+			return float(next(self.reader))
+		elif ISO8601.match(token):
+			return dt.strptime(next(self.reader), "%Y-%m-%dT%H:%M:%SZ").isoformat()
+		elif STRING.match(token):
+			return next(self.reader)[1:-1]
+		raise Exception("WTF!")
 
 	#######
 
 	def parseCOMMENT(self):
 		self.reader.discartLine()
 	
-	def parseSymbol(self):
-		return next(self.reader)
-
 	def parseKEYGROUP(self):
 		self.reader.skipToken('[')
-		keygroup = self.parseSymbol()
+		keygroup = next(self.reader) # symbol
 		self.reader.skipToken(']')
 		self.assignKeyGroup(keygroup)
 	
 	def parseASSIGN(self):
 		# Parse an assignment
-		var = self.parseSymbol()
+		var = next(self.reader) # symbol
 		self.reader.skipToken('=')
+		val = self.parseEXP()
 		self.current_keygroup[var] = val
 
 	#######
@@ -172,30 +152,25 @@ class Evaluator(object):
 			(self.parseASSIGN,lambda token: re.match(r'[^\W\d_]', token, re.U)),
 		)
 
-		self.reader = Reader(self.file)
 		while self.reader.readNextLine():
 			# Due to the simplistic and non-recursive nature of the markup,
 			# all expressions can be identified by the first meaninful
 			# (non-whitespace) character of the line.
-	
+
 			for callback, test in TESTS:
 				if test(self.reader.top()):
 					callback()
 					break
 			else:
-				raise Exception("Unrecognized token %s" % token)
+				raise Exception("Unrecognized token %s" % self.reader.top())
 			self.reader.assertEOF()
 
 		return self.runtime
 
 def main():
-	# some setting up
-
-	obj = Evaluator(open('test.toml', 'r'))
-	return
 
 	import sys
-	file = open(sys.argv[1], "r")
+	file = open('test.toml', "r")
 	obj = Evaluator(file)
 	return obj
 
