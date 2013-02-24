@@ -6,7 +6,7 @@
 from datetime import datetime as dt
 import re
 
-from .reader import Reader	
+from src.reader import Reader	
 
 class Parser(object):
 

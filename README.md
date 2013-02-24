@@ -6,6 +6,7 @@ Info here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
 
 ## Usage
 	
+	# As a string (must be unicode)
 	from src import parser
 	obj = parser.Parser("""
 		[database]
@@ -16,3 +17,6 @@ Info here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
 	# or using a file
 	from src import parser
 	obj = parser.Parser(open('test.toml', 'r'))
+
+## To Do
+- Support multiline array.
