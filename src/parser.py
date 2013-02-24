@@ -1,28 +1,24 @@
 #! /usr/bin/env python3
 # -*- encoding: utf8 -*-
 
-# A TOML parser for Python3
+# A TOML _parser for Python3
 
 from datetime import datetime as dt
+import json
 import re
 
 from src.reader import Reader	
 
-class Parser(object):
+class _Parser(object):
 
 	def __init__(self, input):
 		self.reader = Reader(input)
 
 		self.runtime = dict()
-		self.current_keygroup = self.runtime
-		print(self.mainLoop())
-		import json
-		print(json.dumps(self.runtime, indent=4, separators=(',', ': ')))
+		self._curkeygroup = self.runtime
+		self._mainLoop()
 
-	def __call__(self):
-		raise Exception("hey, I'm here")
-	
-	def assignKeyGroup(self, keygroup):
+	def _assignKeyGroup(self, keygroup):
 		cg = self.runtime
 		nlist = keygroup.split('.')
 		for name in nlist:
@@ -31,24 +27,23 @@ class Parser(object):
 				cg[name] = dict()
 			# print("going to %s", name)
 			cg = cg[name]
-		self.current_keygroup = cg
+		self._curkeygroup = cg
 
 	####
 	
-	def parseEXP(self):
+	def __parseEXP(self):
 
 		ISO8601 = re.compile(r'^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}Z$')
 		FLOAT = re.compile(r'^[+-]?\d(>?\.\d+)?$')
-		INTEGER = re.compile(r'^[+-]?\d*$')
 		STRING = re.compile(r'(?:".*?[^\\]")|(?:\'.*?[^\\]\')')
 
 		token = self.reader.top()
 		if token == '[':
 			self.reader.skipToken("[")
-			l = [self.parseEXP(), ]
+			l = [self.__parseEXP(), ]
 			while self.reader.top() != ']':
 				self.reader.skipToken(",")
-				l.append(self.parseEXP())
+				l.append(self.__parseEXP())
 			self.reader.skipToken("]")
 			return l
 		elif token in ('true', 'false'):
@@ -65,29 +60,29 @@ class Parser(object):
 
 	#######
 
-	def parseCOMMENT(self):
+	def __parseCOMMENT(self):
 		self.reader.discartLine()
 	
-	def parseKEYGROUP(self):
+	def _parseKEYGROUP(self):
 		self.reader.skipToken('[')
 		keygroup = next(self.reader) # symbol
 		self.reader.skipToken(']')
-		self.assignKeyGroup(keygroup)
+		self._assignKeyGroup(keygroup)
 	
-	def parseASSIGN(self):
+	def _parseASSIGN(self):
 		# Parse an assignment
 		var = next(self.reader) # symbol
 		self.reader.skipToken('=')
-		val = self.parseEXP()
-		self.current_keygroup[var] = val
+		val = self.__parseEXP()
+		self._curkeygroup[var] = val
 
 	#######
 
-	def mainLoop(self):
+	def _mainLoop(self):
 		TESTS = (
-			(self.parseCOMMENT, 	lambda token: token in ("#",)),
-			(self.parseKEYGROUP, 	lambda token: token == ("[")),
-			(self.parseASSIGN,lambda token: re.match(r'[^\W\d_]', token, re.U)),
+			(self.__parseCOMMENT, 	lambda token: token in ("#",)),
+			(self._parseKEYGROUP, 	lambda token: token == ("[")),
+			(self._parseASSIGN,lambda token: re.match(r'[^\W\d_]', token, re.U)),
 		)
 
 		while self.reader.readNextLine():
@@ -101,17 +96,32 @@ class Parser(object):
 					break
 			else:
 				raise Exception("Unrecognized token %s" % self.reader.top())
-			self.reader.assertEOF()
+			self.reader.assertEOL()
 
 		return self.runtime
 
-def main():
 
-	import sys
+class Parser (_Parser):
+	"""Python3 parser for TOML."""
+	
+	def __getitem__(self, item):
+		return self.runtime[item]
+	
+	def __setitem__(self, item, val):
+		self.runtime[item] = val
+	
+	def toDict(self):
+		return self.runtime
+	
+	def toJson(self):
+		return json.dumps(self.runtime)
+
+
+def _main():
+	print("Opening test.toml for testing...")
 	file = open('test.toml', "r")
-	obj = Parser(file)
-	return obj
+	print(Parser(file).toDict())
 
 
 if __name__ == "__main__":
-	main()
+	_main()

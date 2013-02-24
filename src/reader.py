@@ -13,7 +13,7 @@ class Reader(object):
 			input.seek(0)
 			self.lineFeeder = input
 		except AttributeError:
-			# Assume it's a string.
+			# Otherwise, assume it's a string.
 			# Use string with file interface. :)
 			from io import StringIO
 			self.lineFeeder = StringIO(input)
@@ -30,16 +30,16 @@ class Reader(object):
 	
 	@staticmethod
 	def _cleverSplit(line):
-		# Splits tokens
+		# Split tokens (keeping quoted strings intact).
 
-		PATTERN = re.compile(r"""(\s|\]|\[|
-								\, |
-								".*?[^\\]" 	| 	# match single quoted exp
-								'.*?[^\\]'	| 	# match double quoted exp
-								)""", re.X)
+		PATTERN = re.compile(r"""(
+				\s | \] | \[ | \, | = |	# Match whitespace, braces, comma, =
+				".*?[^\\]" | '.*?[^\\]' # Match single/double-quotes.
+			)""", re.X)
 		return [p for p in PATTERN.split(line) if p.strip()]
 		
 	def _getNextLine(self):
+		# Get next line from input.
 		try: # Turn next line into a list of tokens.
 			tline = self._cleverSplit(next(self.lineFeeder))
 			if not tline:
@@ -51,27 +51,42 @@ class Reader(object):
 	###
 	
 	def top(self):
-		# get "top of the stack" #!doc
+		"""Read next token in current line."""
+
 		return self.line[0]
 
 	def readNextLine(self):
+		"""Update interval env to reference next line found in the input.
+		If no next line is found: False is returned; otherwise, True."""
+
 		self.line = self._getNextLine()
 		return True if self.line else False
 
 	def ungetToken(self, value):
+		"""Put a token back on the stack."""
+
 		self.line = [value]+self.line
 
 	def discartLine(self):
-		# Discarts the contents of the rest of the line.
-		# The usage of this method is preferred over having the reader iterate
-		# through the rest of the line.
+		"""Discart the contents of the rest of the line.
+		The usage of this method is preferred over having the reader iterate
+		through the rest of the line (which is cleary way more expansive).
+		"""
+		
 		self.line = []
 	
 	def skipToken(self, *expected):
+		"""Skip the next token.
+		If arguments are supplied, the skipped token is matched against them,
+		raising an exception if match is negative."""
+
 		val = next(self)
-		if expected is not None:
-			assert val in expected, "FAIL! '%s' not in '%s'" % (val, expected)
+		if expected is not None and val not in expected:
+			raise Exception("FAIL! '%s' not in '%s'" % (val, expected))
 	
-	def assertEOF(self):
+	def assertEOL(self):
+		"""Assert no valid token is found until EOL.
+		Ignores comemnts."""
+
 		if self.line and self.line[0] != '#':
 			raise Exception("EOF expected but not found.", self.line)
