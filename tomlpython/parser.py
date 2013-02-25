@@ -60,7 +60,11 @@ class _Parser(object):
 	#######
 
 	def __parseCOMMENT(self):
+<<<<<<< HEAD
 		self.reader.discardLine()
+=======
+		self.reader.discartLine()
+>>>>>>> d1442b78e77d36d368da55f2ff3aae97bf3959fc
 	
 	def _parseKEYGROUP(self):
 		self.reader.skipToken('[')

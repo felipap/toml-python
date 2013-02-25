@@ -67,7 +67,11 @@ class Reader(object):
 
 		self.line = [value]+self.line
 
+<<<<<<< HEAD
 	def discardLine(self):
+=======
+	def discartLine(self):
+>>>>>>> d1442b78e77d36d368da55f2ff3aae97bf3959fc
 		"""Discart the contents of the rest of the line.
 		The usage of this method is preferred over having the reader iterate
 		through the rest of the line (which is cleary way more expansive).
