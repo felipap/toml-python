@@ -3,6 +3,7 @@ Python3 parser for TOML
 =======================
 
 Info here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
+### Feel free to send a pull request.
 
 ## Usage
 	
