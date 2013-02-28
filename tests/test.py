@@ -10,6 +10,7 @@ DIR = dirname(abspath(__file__))
 TOMLFiles = glob(join(DIR, '*.toml'))
 
 def addSysPath(path):
+	# Add path to sys.path during executing of routine.
 	def decorator(func):
 		@wraps(func)
 		def wrapper(*args, **kwargs):
@@ -22,12 +23,17 @@ def addSysPath(path):
 
 
 def parseTOMLfiles():
-	
+	# Parse TOML files in current dir.
 	for filename in TOMLFiles:
-		print("Testing file ", filename)
 		with open(filename) as file:
+			print("Testing file ", filename)
 			tomlpython.toJSON(file)
 			tomlpython.parse(file)
+			print("Testing file", filename, "as string")
+			file.seek(0)
+			tomlpython.toJSON(file.read())
+			file.seek(0)
+			tomlpython.parse(file.read())
 	
 
 class Test(unittest.TestCase):
@@ -40,7 +46,7 @@ class Test(unittest.TestCase):
 		parseTOMLfiles()
 
 
-@addSysPath('..')
+@addSysPath(dirname(DIR))
 def main():
 	global tomlpython # little hack?
 	import tomlpython as tomlpython

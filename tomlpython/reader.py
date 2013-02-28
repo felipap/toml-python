@@ -8,7 +8,6 @@ def assertEOL(reader):
 	if reader.line and reader.line[0] != '#':
 		raise Exception("EOF expected but not found.", reader.line)
 
-
 def pop(reader, expect=None):
 	# Pops top token from "stack" and returns.
 	if not reader.line:
@@ -19,16 +18,14 @@ def pop(reader, expect=None):
 				(val, expect))
 	return val
 
-
 def top(reader):
 	# Returns next token on STACK. Ignores comments.
 	# If EOL, next line is loaded.
-	rem = next(reader)
+	rem = reader.__next__()
 	if not rem:
 		reader._readNextLine()
 		return top(reader)
 	return rem
-
 
 def skip(reader, *expect):
 	# Skips next token from reader.
@@ -37,19 +34,22 @@ def skip(reader, *expect):
 		raise Exception("Failed to skip token '%s': expected one in '%s,'."\
 				% (val, ', '.join(expect)))
 
-
 def readLine(reader):
 	# Updates line on reader and returns False if EOF is found.
 	return reader._readNextLine()
 
-
 def allownl(reader):
 	# If nothing left on stack, read new line.
 	# Used for multiline arrays and such.
-	if not next(reader):
+	if not reader.__next__():
 		readLine(reader)
 
+def custom_next(obj):
+	# For backward compatibility.
+	# Imported only if python is 2.x
+	return obj.__next__()
 
+	
 class Reader(object):
 
 	def __init__(self, input):
@@ -63,7 +63,7 @@ class Reader(object):
 			# Otherwise, assume it's a string.
 			# Use string with file interface. :)
 			from io import StringIO
-			self.lineFeeder = StringIO(input)
+			self.lineFeeder = StringIO(unicode(input))
 	
 	@staticmethod
 	def _cleverSplit(line):
@@ -87,6 +87,7 @@ class Reader(object):
 		except StopIteration:
 			self.line = None
 		return self.line
+	
 	
 	def __next__(self):
 		# Returns next token in the current LINE.

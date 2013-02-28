@@ -5,10 +5,18 @@
 
 from datetime import datetime as dt
 import re
+import sys
 
 from tomlpython.reader import Reader
 from tomlpython.reader import pop, top, skip
 from tomlpython.reader import readLine, assertEOL, allownl
+
+print("30"*300)
+
+print(sys.version_info[0])
+if sys.version_info[0] == 2:
+	print("It's me")
+	from tomlpython.reader import custom_next as next
 
 
 class Parser(object):

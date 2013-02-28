@@ -1,4 +1,4 @@
-Python 3 parser for [TOML](https://github.com/mojombo/toml)
+Python parser for [TOML](https://github.com/mojombo/toml)
 =======================
 
 Check out the spec here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
