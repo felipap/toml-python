@@ -7,7 +7,7 @@ Info here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
 
 ## Usage
 	
-	# As a string (must be unicode)
+	# From string
 	from tomlpython import parse
 	obj = parser("""
 		[database]
@@ -15,7 +15,7 @@ Info here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
 		ports = [ 8001, 8001, 8002 ]
 	""")
 
-	# or using a file
+	# From file
 	from tomlpyhon import parser
 	obj = parse(open('test.toml', 'r'))
 
