@@ -8,16 +8,16 @@ Info here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
 ## Usage
 	
 	# As a string (must be unicode)
-	from src import parser
-	obj = parser.Parser("""
+	from tomlpython import parse
+	obj = parser("""
 		[database]
 		server = "192.168.1.1"
 		ports = [ 8001, 8001, 8002 ]
 	""")
 
 	# or using a file
-	from src import parser
-	obj = parser.Parser(open('test.toml', 'r'))
+	from tomlpyhon import parser
+	obj = parse(open('test.toml', 'r'))
 
 ## To Do
 - Support multiline array.

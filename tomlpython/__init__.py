@@ -1,5 +1,5 @@
 
 
-__all__ = ('Parser',)
+__all__ = ('parse',)
 
-from tomlpython.parser import Parser
+from tomlpython.parser import parse

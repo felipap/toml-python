@@ -11,7 +11,7 @@ from tomlpython.reader import Reader
 from tomlpython.reader import top, pop, skip
 from tomlpython.reader import readLine, assertEOL
 
-class _TOMLParser(object):
+class Parser(object):
 
 	def __init__(self, reader):
 
@@ -90,11 +90,11 @@ class _TOMLParser(object):
 			(self.parseASSIGN,lambda token: re.match(r'[^\W\d_]', token, re.U)),
 		)
 
-		while readLine(self.reader):
-			# Due to the simplistic and non-recursive nature of the markup,
-			# all expressions can be identified by the first meaninful
-			# (non-whitespace) character of the line.
+		# Due to the simplistic and non-recursive nature of the markup,
+		# all expressions can be identified by the first meaninful
+		# (non-whitespace) character of the line.
 
+		while readLine(self.reader):
 			for callback, test in TESTS:
 				if test(top(self.reader)):
 					callback()
@@ -105,26 +105,9 @@ class _TOMLParser(object):
 
 		return self.runtime
 
-
-class Parser(object):
-	"""Python3 parser for TOML."""
+def parse(input):
+	"""Parse a TOML string or file."""
 	
-	def __init__(self, input):
-		self.reader = Reader(input)
-		self.parser = _TOMLParser(self.reader)
-
-	def __getitem__(self, item):
-		return self.parser.runtime[item]
-	
-	def __setitem__(self, item, val):
-		self.parser.runtime[item] = val
-		
-	def __repr__(self):
-		return self.toJson()
-
-	def toDict(self):
-		return self.parser.runtime
-	
-	def toJson(self):
-		return json.dumps(self.parser.runtime)
-
+	reader = Reader(input)
+	parser = Parser(reader)
+	return parser.runtime
