@@ -94,7 +94,6 @@ class Parser(object):
 
 		while readLine(self.reader):
 			token = next(self.reader)
-			print("newline:", self.reader.line)
 			if token == "#":
 				self.parseCOMMENT()
 			elif token[0] == "[":

@@ -1,21 +1,52 @@
+# -*- encoding: utf8 -*-
 
-from os.path import dirname, abspath, join
-
-from tomlpython import parse, toJSON
+from os.path import abspath, dirname, join
+from functools import wraps
+from glob import glob
+import unittest
+import sys
 
 DIR = dirname(abspath(__file__))
+TOMLFiles = glob(join(DIR, '*.toml'))
 
-A = """
-a = [1, 2, 3]
-"""
+def addSysPath(path):
+	def decorator(func):
+		@wraps(func)
+		def wrapper(*args, **kwargs):
+			sys.path.insert(0, abspath(path))
+			val = func(*args, **kwargs)
+			sys.path = sys.path[1:]
+			return val
+		return wrapper	
+	return decorator
 
-B = """
-a = [1, 2,
-  3]
-"""
 
-print(parse(A))
-print(parse(B))
+def parseTOMLfiles():
+	
+	for filename in TOMLFiles:
+		print("Testing file ", filename)
+		with open(filename) as file:
+			tomlpython.toJSON(file)
+			tomlpython.parse(file)
+	
 
-print(toJSON(open(join(DIR, "test2.toml")), indent=4))
-print(toJSON(open(join(DIR, "hard_example.toml")), indent=4))
+class Test(unittest.TestCase):
+	
+	def setUp(self):
+		pass
+	
+	def test_toml_examples(self):
+		# Check if Exception is not thrown
+		parseTOMLfiles()
+
+
+@addSysPath('..')
+def main():
+	global tomlpython # little hack?
+	import tomlpython as tomlpython
+	unittest.main()
+
+if __name__ == "__main__":
+	main()
+
+
