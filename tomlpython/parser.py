@@ -129,7 +129,7 @@ def parse(input):
 	parser = Parser(reader)
 	return parser.runtime
 
-def toJSON(input):
+def toJSON(input, **kwargs):
 	"""Parse a TOML string or file to JSON string."""
 	import json
-	return json.dumps(parse(input), indent=4)
+	return json.dumps(parse(input), **kwargs)
