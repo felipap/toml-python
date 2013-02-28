@@ -71,21 +71,18 @@ class Parser(object):
 		pass
 	
 	def parseKEYGROUP(self):
-		skip(self.reader, '[')
-		kg = pop(self.reader) # symbol
-		skip(self.reader, ']')
-		self.loadKeyGroup(kg)
+		symbol = pop(self.reader)[1:-1]
+		self.loadKeyGroup(symbol)
 	
 	def parseASSIGN(self):
 		# Parse an assignment
 		# disallow variable rewriting
 		var = pop(self.reader) # symbol
-		skip(self.reader, '=')
+		pop(self.reader, expect='=')
 		val = self.parseEXP()
 		if self.kgObj.get(var):
 			# Disallow variable rewriting.
 			raise Exception("Cannot rewrite variable %s" % var)
-			
 		self.kgObj[var] = val
 
 	#######
@@ -97,9 +94,10 @@ class Parser(object):
 
 		while readLine(self.reader):
 			token = next(self.reader)
+			print("newline:", self.reader.line)
 			if token == "#":
 				self.parseCOMMENT()
-			elif token == "[":
+			elif token[0] == "[":
 				self.parseKEYGROUP()
 			elif re.match(r'[^\W\d_]', token, re.U):
 				self.parseASSIGN()
@@ -107,7 +105,6 @@ class Parser(object):
 				raise Exception("Unrecognized token '%s'." % token)
 			assertEOL(self.reader)
 		# return self.runtime
-
 
 def parse(input):
 	"""Parse a TOML string or file."""

@@ -6,14 +6,18 @@ def assertEOL(reader):
 	# Asserts not valid token is found until EOL.
 	# Accepts comments.
 	if reader.line and reader.line[0] != '#':
-		raise Exception("EOF expected but not found.", self.line)
+		raise Exception("EOF expected but not found.", reader.line)
 
 
-def pop(reader):
+def pop(reader, expect=None):
 	# Pops top token from "stack" and returns.
 	if not reader.line:
 		return False
-	return reader.line.pop(0)
+	val = reader.line.pop(0)
+	if expect and val != expect:
+		raise Exception("Popped token '%s' was not expected '%s'." %\
+				(val, expect))
+	return val
 
 
 def top(reader):
@@ -65,10 +69,12 @@ class Reader(object):
 	def _cleverSplit(line):
 		# Split tokens (keeping quoted strings intact).
 		PATTERN = re.compile(r"""(
-				\s | \] | \[ | \, | = |	\# | # Whitespace, braces, comma, =
-				".*?[^\\]" | '.*?[^\\]' # Match single/double-quotes.
+				^\[.*?\] |						# Match Braces
+				".*?[^\\]" | '.*?[^\\]' |		# Match Single/double-quotes
+				\s | \] | \[ | \, | = |	\# | 	# Whitespace, braces, comma, =
 			)""", re.X)
-		return [p for p in PATTERN.split(line) if p.strip()]
+		# Line stripping is essential for keygroup matching to work.
+		return [p for p in PATTERN.split(line.strip()) if p.strip()]
 		
 	def _readNextLine(self):
 		# Get next line from input.

@@ -20,30 +20,16 @@ enabled = true
   [servers.alpha]
   ip = "10.0.0.1"
   dc = "eqdc10"
-  
-  [servers.alpha]
-  dcs = "eqdc10"
 
   [servers.beta]
   ip = "10.0.0.2"
   dc = "eqdc10"
 
 [clients]
-data = [ ["gamma", "delta"], [1, 2] ]
+data = [ ["gamma", "delta"], [1, 2] ] # just an update to make sure parsers support it
 
 # Line breaks are OK when inside arrays
-hosts = [ #sdf
+hosts = [
   "alpha",
-  "omega",
-]
-
-[fruit]
-tsype = "apple"
-
-[fruit.type.b]
-sapple = "yes"
-
-hosts2 = []
-hosts4 = [
-	
+  "omega"
 ]
