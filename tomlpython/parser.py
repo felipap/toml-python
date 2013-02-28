@@ -36,8 +36,6 @@ class Parser(object):
 		FLOAT = re.compile(r'^[+-]?\d(>?\.\d+)?$')
 		STRING = re.compile(r'(?:".*?[^\\]")|(?:\'.*?[^\\]\')')
 
-
-		# rewrite to allow empty lists
 		# disallow variable rewriting
 
 		token = next(self.reader)
@@ -52,23 +50,6 @@ class Parser(object):
 			allownl(self.reader)
 			skip(self.reader, "]")
 			return array
-
-		elif token == '[':
-			skip(self.reader, "[")
-
-			allownl(self.reader)
-			l = [self.parseEXP(), ]
-			while next(self.reader) != ']':
-				skip(self.reader, ",")
-				allownl(self.reader)
-				if next(self.reader) == ']':
-					break
-				l.append(self.parseEXP())
-				allownl(self.reader)
-
-			allownl(self.reader)
-			skip(self.reader, "]")
-			return l
 		elif token in ('true', 'false'):
 			return {'true': True, 'false': False}[pop(self.reader)]
 		elif token.isdigit() or token[1:].isdigit() and token[1] in ('+', '-'):
