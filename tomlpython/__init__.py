@@ -1,5 +1,5 @@
 
 
-__all__ = ('parse',)
+__all__ = ('parse','toJSON')
 
-from tomlpython.parser import parse
+from tomlpython.parser import parse, toJSON

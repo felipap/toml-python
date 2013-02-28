@@ -20,5 +20,5 @@ Info here: [https://github.com/mojombo/toml](https://github.com/mojombo/toml)
 	obj = parse(open('test.toml', 'r'))
 
 ## To Do
-- Support multiline array.
 - Write de-serializer
+- Improve debugging system.
