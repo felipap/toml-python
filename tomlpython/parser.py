@@ -7,18 +7,20 @@ from datetime import datetime as dt
 import json
 import re
 
-from src.reader import Reader	
+from tomlpython.reader import Reader
+from tomlpython.reader import top, pop, skip
+from tomlpython.reader import readLine, assertEOL
 
-class _Parser(object):
+class _TOMLParser(object):
 
-	def __init__(self, input):
-		self.reader = Reader(input)
+	def __init__(self, reader):
 
+		self.reader = reader
 		self.runtime = dict()
-		self._curkeygroup = self.runtime
-		self._mainLoop()
+		self.curkeygroup = self.runtime
+		self.mainLoop()
 
-	def _assignKeyGroup(self, keygroup):
+	def assignKeyGroup(self, keygroup):
 		cg = self.runtime
 		nlist = keygroup.split('.')
 		for name in nlist:
@@ -26,93 +28,103 @@ class _Parser(object):
 			except KeyError:
 				cg[name] = dict()
 			cg = cg[name]
-		self._curkeygroup = cg
+		self.curkeygroup = cg
 
 	####
 	
-	def __parseEXP(self):
+	def parseEXP(self):
+		
+		# Locals are faster
 
 		ISO8601 = re.compile(r'^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}Z$')
 		FLOAT = re.compile(r'^[+-]?\d(>?\.\d+)?$')
 		STRING = re.compile(r'(?:".*?[^\\]")|(?:\'.*?[^\\]\')')
 
-		token = self.reader.top()
+		token = top(self.reader)
 		if token == '[':
-			self.reader.skipToken("[")
-			l = [self.__parseEXP(), ]
-			while self.reader.top() != ']':
-				self.reader.skipToken(",")
-				l.append(self.__parseEXP())
-			self.reader.skipToken("]")
+			skip(self.reader, "[")
+			l = [self.parseEXP(), ]
+			while top(self.reader) != ']':
+				skip(self.reader, ",")
+				l.append(self.parseEXP())
+			skip(self.reader, "]")
 			return l
 		elif token in ('true', 'false'):
-			return {'true': True, 'false': False}[next(self.reader)]
+			return {'true': True, 'false': False}[pop(self.reader)]
 		elif token.isdigit() or token[1:].isdigit() and token[1] in ('+', '-'):
-			return int(next(self.reader))
+			return int(pop(self.reader))
 		elif FLOAT.match(token):
-			return float(next(self.reader))
+			return float(pop(self.reader))
 		elif ISO8601.match(token):
-			return dt.strptime(next(self.reader), "%Y-%m-%dT%H:%M:%SZ").isoformat()
+			return dt.strptime(pop(self.reader), "%Y-%m-%dT%H:%M:%SZ").isoformat()
 		elif STRING.match(token):
-			return next(self.reader)[1:-1]
+			return pop(self.reader)[1:-1]
 		raise Exception("WTF!")
 
 	#######
 
-	def __parseCOMMENT(self):
-		self.reader.discardLine()
+	def parseCOMMENT(self):
+		# Do nothing.
+		# Loop to next line. 
+		pass
 	
-	def _parseKEYGROUP(self):
-		self.reader.skipToken('[')
-		keygroup = next(self.reader) # symbol
-		self.reader.skipToken(']')
-		self._assignKeyGroup(keygroup)
+	def parseKEYGROUP(self):
+		skip(self.reader, '[')
+		keygroup = pop(self.reader) # symbol
+		skip(self.reader, ']')
+		self.assignKeyGroup(keygroup)
 	
-	def _parseASSIGN(self):
+	def parseASSIGN(self):
 		# Parse an assignment
-		var = next(self.reader) # symbol
-		self.reader.skipToken('=')
-		val = self.__parseEXP()
-		self._curkeygroup[var] = val
+		var = pop(self.reader) # symbol
+		skip(self.reader, '=')
+		val = self.parseEXP()
+		self.curkeygroup[var] = val
 
 	#######
 
-	def _mainLoop(self):
+	def mainLoop(self):
 		TESTS = (
-			(self.__parseCOMMENT, 	lambda token: token in ("#",)),
-			(self._parseKEYGROUP, 	lambda token: token == ("[")),
-			(self._parseASSIGN,lambda token: re.match(r'[^\W\d_]', token, re.U)),
+			(self.parseCOMMENT, 	lambda token: token in ("#",)),
+			(self.parseKEYGROUP, 	lambda token: token == ("[")),
+			(self.parseASSIGN,lambda token: re.match(r'[^\W\d_]', token, re.U)),
 		)
 
-		while self.reader.readNextLine():
+		while readLine(self.reader):
 			# Due to the simplistic and non-recursive nature of the markup,
 			# all expressions can be identified by the first meaninful
 			# (non-whitespace) character of the line.
 
 			for callback, test in TESTS:
-				if test(self.reader.top()):
+				if test(top(self.reader)):
 					callback()
 					break
 			else:
-				raise Exception("Unrecognized token %s" % self.reader.top())
-			self.reader.assertEOL()
+				raise Exception("Unrecognized token %s" % top(self.reader))
+			assertEOL(self.reader)
 
 		return self.runtime
 
 
-class Parser (_Parser):
+class Parser(object):
 	"""Python3 parser for TOML."""
 	
+	def __init__(self, input):
+		self.reader = Reader(input)
+		self.parser = _TOMLParser(self.reader)
+
 	def __getitem__(self, item):
-		return self.runtime[item]
+		return self.parser.runtime[item]
 	
 	def __setitem__(self, item, val):
-		self.runtime[item] = val
-	
+		self.parser.runtime[item] = val
+		
+	def __repr__(self):
+		return self.toJson()
+
 	def toDict(self):
-		return self.runtime
+		return self.parser.runtime
 	
 	def toJson(self):
-		return json.dumps(self.runtime)
-
+		return json.dumps(self.parser.runtime)
 

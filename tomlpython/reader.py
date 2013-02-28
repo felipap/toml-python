@@ -2,6 +2,37 @@
 
 import re
 
+
+def assertEOL(reader):
+	# Asserts not valid token is found until EOL.
+	# Accepts comments.
+	if reader.line and reader.line[0] != '#':
+		raise Exception("EOF expected but not found.", self.line)
+
+def pop(reader):
+	# Pops top token from "stack" and returns.
+	if not reader.line:
+		return False
+	return reader.line.pop(0)
+
+def top(reader):
+	# Returns top element on stack.
+	if not reader.line:
+		return False
+	return reader.line[0]
+
+def skip(reader, *expect):
+	# Skips next token from reader.
+	val = pop(reader)
+	if expect and val not in expect:
+		raise Exception("Failed to skip '%s': expected '%s'." % (val, expect))
+
+def readLine(reader):
+	# Updates line on reader and returns False if EOF is found.
+	reader._readNextLine()
+	return bool(reader.line)
+
+
 class Reader(object):
 
 	def __init__(self, input):
@@ -17,14 +48,6 @@ class Reader(object):
 			# Use string with file interface. :)
 			from io import StringIO
 			self.lineFeeder = StringIO(input)
-		
-	def __iter__(self):
-		return self
-	
-	def __next__(self):
-		if not self.line:
-			raise StopIteration()
-		return self.line.pop(0)
 	
 	###
 	
@@ -38,55 +61,12 @@ class Reader(object):
 			)""", re.X)
 		return [p for p in PATTERN.split(line) if p.strip()]
 		
-	def _getNextLine(self):
+	def _readNextLine(self):
 		# Get next line from input.
 		try: # Turn next line into a list of tokens.
 			tline = self._cleverSplit(next(self.lineFeeder))
 			if not tline:
-				return self._getNextLine()
-			return tline
+				self.line = self._readNextLine()
+			self.line = tline
 		except StopIteration:
-			return None
-		
-	###
-	
-	def top(self):
-		"""Read next token in current line."""
-
-		return self.line[0]
-
-	def readNextLine(self):
-		"""Update interval env to reference next line found in the input.
-		If no next line is found: False is returned; otherwise, True."""
-
-		self.line = self._getNextLine()
-		return True if self.line else False
-
-	def ungetToken(self, value):
-		"""Put a token back on the stack."""
-
-		self.line = [value]+self.line
-
-	def discardLine(self):
-		"""Discard the contents of the rest of the line.
-		The usage of this method is preferred over having the reader iterate
-		through the rest of the line (which is cleary way more expansive).
-		"""
-		
-		self.line = []
-	
-	def skipToken(self, *expected):
-		"""Skip the next token.
-		If arguments are supplied, the skipped token is matched against them,
-		raising an exception if match is negative."""
-
-		val = next(self)
-		if expected is not None and val not in expected:
-			raise Exception("FAIL! '%s' not in '%s'" % (val, expected))
-	
-	def assertEOL(self):
-		"""Assert no valid token is found until EOL.
-		Ignores comemnts."""
-
-		if self.line and self.line[0] != '#':
-			raise Exception("EOF expected but not found.", self.line)
+			self.line = None
