@@ -8,9 +8,10 @@ Check out the spec here: [https://github.com/mojombo/toml](https://github.com/mo
 - [x] Allow multiline arrays.
 - [x] Disallow variable rewriting.
 - [x] Format to JSON.
+- [x] Build unittests.
 - [ ] Write de-serializer
-- [ ] Build tests.
 - [ ] Improve debugging system.
+- [ ] Improve tests.
 
 ## Usage
 ### TOML from string
