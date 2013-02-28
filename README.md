@@ -13,6 +13,11 @@ Check out the spec here: [https://github.com/mojombo/toml](https://github.com/mo
 - [ ] Improve debugging system.
 - [ ] Improve tests.
 
+## Installation
+```bash
+pip install toml-python
+```
+
 ## Usage
 ### TOML from string
 ```python
@@ -35,6 +40,9 @@ obj = parse(open('test.toml', 'r'))
 from tomlpython import toJSON
 obj = toJSON(open('test.toml', 'r'), indent=4)
 ```
+
+### Testing
+Use `tests/test.py`
 
 ## License
 MIT
