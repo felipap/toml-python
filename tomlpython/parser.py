@@ -10,6 +10,7 @@ from tomlpython.reader import Reader
 from tomlpython.reader import pop, top, skip
 from tomlpython.reader import readLine, assertEOL, allownl
 
+
 class Parser(object):
 
 	def __init__(self, reader):
@@ -18,13 +19,15 @@ class Parser(object):
 		self.kgObj = self.runtime
 		self.mainLoop()
 
-	def assignKeyGroup(self, keygroup):
+	def loadKeyGroup(self, keygroup):
 		cg = self.runtime
 		nlist = keygroup.split('.')
 		for name in nlist:
-			try: cg[name]
-			except KeyError:
+			if not name in cg:
 				cg[name] = dict()
+			elif not isinstance(cg[name], dict):
+				raise Exception("Invalid use of var '%s' from '%s' as keygroup"\
+						% (name, cg))
 			cg = cg[name]
 		self.kgObj = cg
 
@@ -35,8 +38,6 @@ class Parser(object):
 		ISO8601 = re.compile(r'^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}Z$')
 		FLOAT = re.compile(r'^[+-]?\d(>?\.\d+)?$')
 		STRING = re.compile(r'(?:".*?[^\\]")|(?:\'.*?[^\\]\')')
-
-		# disallow variable rewriting
 
 		token = next(self.reader)
 		if token == '[':
@@ -73,13 +74,18 @@ class Parser(object):
 		skip(self.reader, '[')
 		kg = pop(self.reader) # symbol
 		skip(self.reader, ']')
-		self.assignKeyGroup(kg)
+		self.loadKeyGroup(kg)
 	
 	def parseASSIGN(self):
 		# Parse an assignment
+		# disallow variable rewriting
 		var = pop(self.reader) # symbol
 		skip(self.reader, '=')
 		val = self.parseEXP()
+		if self.kgObj.get(var):
+			# Disallow variable rewriting.
+			raise Exception("Cannot rewrite variable %s" % var)
+			
 		self.kgObj[var] = val
 
 	#######
