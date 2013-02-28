@@ -9,6 +9,7 @@ Check out the spec here: [https://github.com/mojombo/toml](https://github.com/mo
 - [x] Disallow variable rewriting.
 - [x] Format to JSON.
 - [ ] Write de-serializer
+- [ ] Build tests.
 - [ ] Improve debugging system.
 
 ## Usage
@@ -33,4 +34,5 @@ from tomlpython import toJSON
 obj = toJSON(open('test.toml', 'r'), indent=4)
 ```
 
-
+## License
+MIT
