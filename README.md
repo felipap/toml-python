@@ -8,6 +8,7 @@ Check out the spec here: [https://github.com/mojombo/toml](https://github.com/mo
 - [x] Allow multiline arrays.
 - [x] Disallow variable rewriting.
 - [x] Format to JSON.
+- [x] Pypi support (see [toml-python](https://pypi.python.org/pypi/toml-python))
 - [x] Build unittests.
 - [ ] Write de-serializer
 - [ ] Improve debugging system.
