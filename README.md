@@ -34,7 +34,8 @@ pip install toml-python
 ### TOML from file
 ```python
 >>> import tomlpython
->>> tomlpython(open('test.toml', 'r'))
+>>> with open('data.toml') as datafile:
+>>>		data = tomlpython.parse(datafile)
 ```
 
 ### TOML to JSON (support to prettify as in json.dumps)
@@ -47,11 +48,7 @@ pip install toml-python
     """, indent=4)
 {
     "database": {
-        "ports": [
-            8001, 
-            8001, 
-            8002
-        ], 
+        "ports": [ 8001, 8001, 8002 ], 
         "server": "192.168.1.1"
     }
 }
