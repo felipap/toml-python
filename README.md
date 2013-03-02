@@ -22,24 +22,39 @@ pip install toml-python
 ## Usage
 ### TOML from string
 ```python
-from tomlpython import parse
-obj = parse("""
+>>> import tomlpython
+>>> tomlpython.parse("""
 	[database]
 	server = "192.168.1.1"
 	ports = [ 8001, 8001, 8002 ]
 """)
+{'database': {'ports': [8001, 8001, 8002], 'server': '192.168.1.1'}}
 ```
 
 ### TOML from file
 ```python
-from tomlpython import parse
-obj = parse(open('test.toml', 'r'))
+>>> import tomlpython
+>>> tomlpython(open('test.toml', 'r'))
 ```
 
 ### TOML to JSON (support to prettify as in json.dumps)
 ```python
-from tomlpython import toJSON
-obj = toJSON(open('test.toml', 'r'), indent=4)
+>>> import tomlpython
+>>> tomlpython.toJSON("""
+		[database]
+		server = "192.168.1.1"
+		ports = [ 8001, 8001, 8002 ]
+    """, indent=4)
+{
+    "database": {
+        "ports": [
+            8001, 
+            8001, 
+            8002
+        ], 
+        "server": "192.168.1.1"
+    }
+}
 ```
 
 ### Testing
