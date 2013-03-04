@@ -11,17 +11,15 @@ from tomlpython.reader import Reader
 from tomlpython.reader import pop, top, skip
 from tomlpython.reader import readLine, assertEOL, allownl
 
-print("30"*300)
 
-print(sys.version_info[0])
 if sys.version_info[0] == 2:
-	print("It's me")
 	from tomlpython.reader import custom_next as next
 
 
 class Parser(object):
 
-	def __init__(self, reader):
+	def __init__(self, reader, asJson=False):
+		self.asJson = asJson
 		self.reader = reader
 		self.runtime = dict()
 		self.kgObj = self.runtime
@@ -66,7 +64,8 @@ class Parser(object):
 		elif FLOAT.match(token):
 			return float(pop(self.reader))
 		elif ISO8601.match(token):
-			return dt.strptime(pop(self.reader), "%Y-%m-%dT%H:%M:%SZ").isoformat()
+			date = dt.strptime(pop(self.reader), "%Y-%m-%dT%H:%M:%SZ")
+			return date if not self.asJson else date.isoformat()
 		elif STRING.match(token):
 			return pop(self.reader)[1:-1]
 		raise Exception("Invalid token: '%s'." % token)
@@ -123,4 +122,6 @@ def parse(input):
 def toJSON(input, **kwargs):
 	"""Parse a TOML string or file to JSON string."""
 	import json
-	return json.dumps(parse(input), **kwargs)
+	reader = Reader(input)
+	parser = Parser(reader, asJson=True)
+	return json.dumps(parser.runtime, **kwargs)
