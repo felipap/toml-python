@@ -71,7 +71,8 @@ class Reader(object):
 		PATTERN = re.compile(r"""(
 				^\[.*?\] |						# Match Braces
 				".*?[^\\]" | '.*?[^\\]' |		# Match Single/double-quotes
-				\s | \] | \[ | \, | = |	\# | 	# Whitespace, braces, comma, =
+				\s | \] | \[ | \, | \s= |		# Whitespace, braces, comma, =
+				\s\# | 							# hash
 			)""", re.X)
 		# Line stripping is essential for keygroup matching to work.
 		return [p for p in PATTERN.split(line.strip()) if p.strip()]

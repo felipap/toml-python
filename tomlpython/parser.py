@@ -18,8 +18,9 @@ if sys.version_info[0] == 2:
 
 class Parser(object):
 
-	def __init__(self, reader, asJson=False):
-		self.asJson = asJson
+	def __init__(self, reader, asJson=False, pedantic=True):
+		self._asJson = asJson
+		self._is_pedantic = True
 		self.reader = reader
 		self.runtime = dict()
 		self.kgObj = self.runtime
@@ -29,14 +30,16 @@ class Parser(object):
 		cg = self.runtime
 		nlist = keygroup.split('.')
 		for name in nlist:
-			if not name in cg:
+			if not name:
+				raise Exception("Unexpected emtpy symbol in %s" % keygroup)
+			elif not name in cg:
 				cg[name] = dict()
 			elif not isinstance(cg[name], dict):
-				raise Exception("Invalid use of var '%s' from '%s' as keygroup"\
+				raise Exception("Invalid use of variable '%s' from '%s' as keygroup"\
 						% (name, cg))
 			cg = cg[name]
 		self.kgObj = cg
-
+	
 	####
 
 	def parseEXP(self):
@@ -47,28 +50,36 @@ class Parser(object):
 
 		token = next(self.reader)
 		if token == '[':
+		# Array
 			array = []
 			skip(self.reader, '[')
 			while top(self.reader) != ']':
 				array.append(self.parseEXP())
+				if len(array) > 1 and type(array[-1]) != type(array[0]):
+					raise Exception("Array of mixed data types.")
 				if next(self.reader) != ',':
 					break
 				skip(self.reader, ",")
 			allownl(self.reader)
 			skip(self.reader, "]")
 			return array
+		elif STRING.match(token):
+		# String
+			return pop(self.reader)[1:-1].decode('string-escape')
 		elif token in ('true', 'false'):
+		# Boolean
 			return {'true': True, 'false': False}[pop(self.reader)]
-		elif token.isdigit() or token[1:].isdigit() and token[1] in ('+', '-'):
+		elif token.isdigit() or token[1:].isdigit() and token[0] in ('+', '-'):
+		# Integer
 			return int(pop(self.reader))
 		elif FLOAT.match(token):
+		# Float
 			return float(pop(self.reader))
 		elif ISO8601.match(token):
+		# Date
 			date = dt.strptime(pop(self.reader), "%Y-%m-%dT%H:%M:%SZ")
-			return date if not self.asJson else date.isoformat()
-		elif STRING.match(token):
-			return pop(self.reader)[1:-1]
-		raise Exception("Invalid token: '%s'." % token)
+			return date if not self._asJson else date.isoformat()
+		raise Exception("Invalid token: %s" % token)
 
 	#######
 
@@ -79,6 +90,8 @@ class Parser(object):
 	
 	def parseKEYGROUP(self):
 		symbol = pop(self.reader)[1:-1]
+		if not symbol or symbol.isspace():
+			raise Exception("Empty keygroup found.")
 		self.loadKeyGroup(symbol)
 	
 	def parseASSIGN(self):
@@ -89,7 +102,7 @@ class Parser(object):
 		val = self.parseEXP()
 		if self.kgObj.get(var):
 			# Disallow variable rewriting.
-			raise Exception("Cannot rewrite variable %s" % var)
+			raise Exception("Cannot rewrite variable: %s" % var)
 		self.kgObj[var] = val
 
 	#######
@@ -108,7 +121,7 @@ class Parser(object):
 			elif re.match(r'[^\W\d_]', token, re.U):
 				self.parseASSIGN()
 			else:
-				raise Exception("Unrecognized token '%s'." % token)
+				raise Exception("Unrecognized token: %s" % token)
 			assertEOL(self.reader)
 		# return self.runtime
 
