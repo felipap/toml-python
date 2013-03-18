@@ -10,9 +10,9 @@ Check out the spec here: [https://github.com/mojombo/toml](https://github.com/mo
 - [x] Format to JSON.
 - [x] Pypi support (see [toml-python](https://pypi.python.org/pypi/toml-python))
 - [x] Build unittests.
+- [x] Improve tests (see [toml-test](https://github.com/BurntSushi/toml-test))
 - [ ] Write de-serializer
 - [ ] Improve debugging system.
-- [ ] Improve tests.
 
 ## Installation
 ```bash
