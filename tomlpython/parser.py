@@ -34,9 +34,8 @@ class Parser(object):
 				raise Exception("Unexpected emtpy symbol in %s" % keygroup)
 			elif not name in cg:
 				cg[name] = dict()
-			elif not isinstance(cg[name], dict):
-				raise Exception("Invalid use of variable '%s' from '%s' as keygroup"\
-						% (name, cg))
+			elif isinstance(cg[name], dict):
+				raise Exception("Duplicated keygroup definition: %s" % keygroup)
 			cg = cg[name]
 		self.kgObj = cg
 	
