@@ -55,7 +55,8 @@ pip install toml-python
 ```
 
 ### Testing
-Use `tests/test.py`
+- Use `tests/test.py`
+- See https://github.com/BurntSushi/toml-test
 
 ## License
 MIT
