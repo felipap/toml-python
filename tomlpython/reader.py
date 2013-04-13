@@ -73,7 +73,7 @@ class Reader(object):
 		# Split tokens (keeping quoted strings intact).
 		PATTERN = re.compile(r"""(
 				^\[.*?\] |						# Match Braces
-				".*?[^\\]" | '.*?[^\\]' |		# Match Single/double-quotes
+				".*?[^\\]?" | '.*?[^\\]?' |		# Match Single/double-quotes
 				\# | 						# hash
 				\s | \] | \[ | \, | \s= |		# Whitespace, braces, comma, =
 			)""", re.X)
