@@ -6,8 +6,8 @@ setup(
     name = "toml-python",
 	author = "Felipe Aragão Pires",
 	author_email = "pires.a.felipe@gmail.com",
-    version = "0.3.2",
-    description = "TOML parser for python.",
+    version = "0.4",
+	description = "TOML parser for python.",
     url = "https://github.com/f03lipe/toml-python",
     license = "MIT License",
     classifiers=[

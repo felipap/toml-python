@@ -20,7 +20,7 @@ class Parser(object):
 
 	def __init__(self, reader, asJson=False, pedantic=True):
 		self._asJson = asJson
-		self._is_pedantic = True
+		self._is_pedantic = pedantic
 		self.reader = reader
 		self.runtime = dict()
 		self.kgObj = self.runtime
@@ -29,12 +29,14 @@ class Parser(object):
 	def loadKeyGroup(self, keygroup):
 		cg = self.runtime
 		nlist = keygroup.split('.')
-		for name in nlist:
+		for index, name in enumerate(nlist):
 			if not name:
 				raise Exception("Unexpected emtpy symbol in %s" % keygroup)
 			elif not name in cg:
 				cg[name] = dict()
-			elif isinstance(cg[name], dict):
+			elif isinstance(cg[name], dict)\
+				 and index == len(nlist)-1\
+				 and self._is_pedantic:
 				raise Exception("Duplicated keygroup definition: %s" % keygroup)
 			cg = cg[name]
 		self.kgObj = cg
@@ -45,7 +47,7 @@ class Parser(object):
 		# Locals are faster
 		ISO8601 = re.compile(r'^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}Z$')
 		FLOAT = re.compile(r'^[+-]?\d(>?\.\d+)?$')
-		STRING = re.compile(r'(?:".*?[^\\]")|(?:\'.*?[^\\]\')')
+		STRING = re.compile(r'(?:".*?[^\\]?")|(?:\'.*?[^\\]?\')')
 
 		token = next(self.reader)
 		if token == '[':
@@ -54,7 +56,8 @@ class Parser(object):
 			skip(self.reader, '[')
 			while top(self.reader) != ']':
 				array.append(self.parseEXP())
-				if len(array) > 1 and type(array[-1]) != type(array[0]):
+				if len(array) > 1 and self._is_pedantic\
+				   and type(array[-1]) != type(array[0]):
 					raise Exception("Array of mixed data types.")
 				if next(self.reader) != ',':
 					break

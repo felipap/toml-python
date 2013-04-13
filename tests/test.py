@@ -29,11 +29,6 @@ def parseTOMLfiles():
 			print("Testing file ", filename)
 			tomlpython.toJSON(file)
 			tomlpython.parse(file)
-			print("Testing file", filename, "as string")
-			file.seek(0)
-			tomlpython.toJSON(file.read())
-			file.seek(0)
-			tomlpython.parse(file.read())
 	
 
 class Test(unittest.TestCase):

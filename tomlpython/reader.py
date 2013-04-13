@@ -49,10 +49,11 @@ def custom_next(obj):
 	# Imported only if python is 2.x
 	return obj.__next__()
 
+VERBOSE = True
 	
 class Reader(object):
 
-	def __init__(self, input):
+	def __init__(self, input, verbose=False):
 		"""Takes as argument an object to feed lines to the Reader."""
 		try:
 			# Try to use as a file.
@@ -64,6 +65,8 @@ class Reader(object):
 			# Use string with file interface. :)
 			from io import StringIO
 			self.lineFeeder = StringIO(unicode(input))
+		global VERBOSE
+		VERBOSE = verbose # be dragons
 	
 	@staticmethod
 	def _cleverSplit(line):
@@ -71,10 +74,12 @@ class Reader(object):
 		PATTERN = re.compile(r"""(
 				^\[.*?\] |						# Match Braces
 				".*?[^\\]" | '.*?[^\\]' |		# Match Single/double-quotes
+				\# | 						# hash
 				\s | \] | \[ | \, | \s= |		# Whitespace, braces, comma, =
-				\s\# | 							# hash
 			)""", re.X)
 		# Line stripping is essential for keygroup matching to work.
+		if VERBOSE:
+			print("token:", [p for p in PATTERN.split(line.strip()) if p.strip()])
 		return [p for p in PATTERN.split(line.strip()) if p.strip()]
 		
 	def _readNextLine(self):
