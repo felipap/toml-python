@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Toml-python by f03lipe</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/f03lipe/toml-python">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/f03lipe/toml-python/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/f03lipe/toml-python/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Toml-python</h1>
+          <p>Python parser for mojombo's TOML.</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/f03lipe">f03lipe</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a name="python-parser-for-toml" class="anchor" href="#python-parser-for-toml"><span class="octicon octicon-link"></span></a>Python parser for <a href="https://github.com/mojombo/toml">TOML</a>
+</h1>
+
+<p>Check out the spec here: <a href="https://github.com/mojombo/toml">https://github.com/mojombo/toml</a></p>
+
+<h3>
+<a name="feel-free-to-send-a-pull-request" class="anchor" href="#feel-free-to-send-a-pull-request"><span class="octicon octicon-link"></span></a>Feel free to send a pull request.</h3>
+
+<h2>
+<a name="todos-and-features" class="anchor" href="#todos-and-features"><span class="octicon octicon-link"></span></a>ToDos and Features</h2>
+
+<ul>
+<li>[x] Allow multiline arrays.</li>
+<li>[x] Disallow variable rewriting.</li>
+<li>[x] Format to JSON.</li>
+<li>[x] Pypi support (see <a href="https://pypi.python.org/pypi/toml-python">toml-python</a>)</li>
+<li>[x] Build unittests.</li>
+<li>[x] Improve tests (see <a href="https://github.com/BurntSushi/toml-test">toml-test</a>)</li>
+<li>[ ] Write de-serializer</li>
+<li>[ ] Improve debugging system.</li>
+</ul><h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<div class="highlight highlight-bash"><pre>pip install toml-python
+</pre></div>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a name="toml-from-string" class="anchor" href="#toml-from-string"><span class="octicon octicon-link"></span></a>TOML from string</h3>
+
+<div class="highlight highlight-python"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">tomlpython</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">tomlpython</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">"""</span>
+<span class="s">    [database]</span>
+<span class="s">    server = "192.168.1.1"</span>
+<span class="s">    ports = [ 8001, 8001, 8002 ]</span>
+<span class="s">"""</span><span class="p">)</span>
+<span class="p">{</span><span class="s">'database'</span><span class="p">:</span> <span class="p">{</span><span class="s">'ports'</span><span class="p">:</span> <span class="p">[</span><span class="mi">8001</span><span class="p">,</span> <span class="mi">8001</span><span class="p">,</span> <span class="mi">8002</span><span class="p">],</span> <span class="s">'server'</span><span class="p">:</span> <span class="s">'192.168.1.1'</span><span class="p">}}</span>
+</pre></div>
+
+<h3>
+<a name="toml-from-file" class="anchor" href="#toml-from-file"><span class="octicon octicon-link"></span></a>TOML from file</h3>
+
+<div class="highlight highlight-python"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">tomlpython</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">'data.toml'</span><span class="p">)</span> <span class="k">as</span> <span class="n">datafile</span><span class="p">:</span>
+<span class="o">&gt;&gt;&gt;</span>     <span class="n">data</span> <span class="o">=</span> <span class="n">tomlpython</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="toml-to-json-support-to-prettify-as-in-jsondumps" class="anchor" href="#toml-to-json-support-to-prettify-as-in-jsondumps"><span class="octicon octicon-link"></span></a>TOML to JSON (support to prettify as in json.dumps)</h3>
+
+<div class="highlight highlight-python"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">tomlpython</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">tomlpython</span><span class="o">.</span><span class="n">toJSON</span><span class="p">(</span><span class="s">"""</span>
+<span class="s">        [database]</span>
+<span class="s">        server = "192.168.1.1"</span>
+<span class="s">        ports = [ 8001, 8001, 8002 ]</span>
+<span class="s">    """</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="s">"database"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">"ports"</span><span class="p">:</span> <span class="p">[</span> <span class="mi">8001</span><span class="p">,</span> <span class="mi">8001</span><span class="p">,</span> <span class="mi">8002</span> <span class="p">],</span> 
+        <span class="s">"server"</span><span class="p">:</span> <span class="s">"192.168.1.1"</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="testing" class="anchor" href="#testing"><span class="octicon octicon-link"></span></a>Testing</h3>
+
+<ul>
+<li>Use <code>tests/test.py</code>
+</li>
+<li>See <a href="https://github.com/BurntSushi/toml-test">https://github.com/BurntSushi/toml-test</a>
+</li>
+</ul><h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>MIT</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
